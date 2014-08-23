@@ -3,4 +3,7 @@ coffee-so-good-repo
 
 coffee-so-good-repo repository
 
-The beginning of an Android accelerometer app
+Tilt and Draw
+
+Using the accelerometer to detect the tilting of a phone the app will draw to the screen.
+

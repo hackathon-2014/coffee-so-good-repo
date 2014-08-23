@@ -7,4 +7,7 @@
     <item android:id="@+id/change_brushsize"
         android:title="Change Brush Size"
         android:showAsAction="ifRoom"/>
+    <item android:id="@+id/share"
+        android:title="Share on Twitter"
+        android:showAsAction="ifRoom"/>
 </menu>

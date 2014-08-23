@@ -3,12 +3,19 @@ package com.chuckwoodraska.accelerometer.app;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
@@ -16,7 +23,10 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,10 +38,15 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 
@@ -48,6 +63,11 @@ public class MainActivity extends Activity implements SensorEventListener {
     public ArrayList<Integer> paths_brushsize = new ArrayList<Integer>();
     public String[] colors_array = { "RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"};
     public String[] brushsize_array = { "10","50","75"};
+    public int screen_width = 300;
+    public int screen_height = 300;
+    public Bitmap my_bitmap = null;
+
+
 
     // ACCELEROMETER STHUFF
     private SensorManager mSensorManager;
@@ -67,6 +87,15 @@ public class MainActivity extends Activity implements SensorEventListener {
     public final void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        screen_width = size.x;
+        screen_height = size.y;
+
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
+        my_bitmap = Bitmap.createBitmap(screen_width, screen_height, conf); // this creates a MUTABLE bitmap
         //setContentView(R.layout.activity_main); //refer layout file code below
         //get the sensor service
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -198,12 +227,22 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         protected void onDraw(Canvas canvas)
         {
+            Canvas draw = new Canvas();
+
+            Paint paint = new Paint();
+
+//            Bitmap flower = BitmapFactory.decodeResource(getResources(),
+//                    R.drawable.flower);
+//            flower = Bitmap.createScaledBitmap(flower, canvas.getWidth(), canvas.getHeight(), false);
+//           draw.drawBitmap(flower, 0, 0, null);
+            //canvas = new Canvas(my_bitmap);
             Paint p = new Paint(); // set some paint options
             for(int i =0; i < paths.size(); i++){
                 p.setStrokeWidth(brush_size);
                 p.setColor(paths_color.get(i)); // change later for color options
                 canvas.drawOval(paths.get(i), p);
             }
+//            my_bitmap = mCustomDrawableView.getDrawingCache();
             invalidate();
         }
     }
@@ -248,28 +287,11 @@ public class MainActivity extends Activity implements SensorEventListener {
                 okBtn.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View v) {
-                    //respond to level
                         brush_size= brushsize.getProgress();
                         brush_size_dialog.dismiss();
                     }
                 });
-
                 brush_size_dialog.show();
-
-
-
-
-//                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//                builder.setTitle("Pick Brush Size:")
-//                        .setItems(brushsize_array, new DialogInterface.OnClickListener() {
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                brush_size = Integer.parseInt(brushsize_array[which]);
-//                                // The 'which' argument contains the index position
-//                                // of the selected item
-//                            }
-//                        });
-//                builder.create();
-//                builder.show();
                 return true;
             case R.id.change_color:
                 AlertDialog.Builder builder2 = new AlertDialog.Builder(this);
@@ -284,8 +306,55 @@ public class MainActivity extends Activity implements SensorEventListener {
                 builder2.create();
                 builder2.show();
                 return true;
+            case R.id.share:
+                sendShareTwit();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void saveImage(){
+
+        try {
+            String filename = Environment.getExternalStorageDirectory().toString();
+            Canvas canvas = new Canvas(my_bitmap);
+            Paint p = new Paint(); // set some paint options
+            for(int i =0; i < paths.size(); i++){
+                p.setStrokeWidth(brush_size);
+                p.setColor(paths_color.get(i)); // change later for color options
+                canvas.drawOval(paths.get(i), p);
+            }
+
+            File f = new File(filename ,"twitter_image.png");
+            f.createNewFile();
+            //System.out.println("file created " + f.toString());
+            FileOutputStream out = new FileOutputStream(f);
+            Bitmap bitmap = my_bitmap;
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void sendShareTwit() {
+        try {
+            Intent tweetIntent = new Intent(Intent.ACTION_SEND);
+
+            String filename = "twitter_image.png";
+            saveImage();
+            File imageFile = new File(Environment.getExternalStorageDirectory(), filename);
+
+            tweetIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.twitter_share));
+            tweetIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
+            tweetIntent.setType("image/png");
+            PackageManager pm = getBaseContext().getPackageManager();
+            List<ResolveInfo> lract = pm.queryIntentActivities(tweetIntent, PackageManager.MATCH_DEFAULT_ONLY);
+
+            startActivity(Intent.createChooser(tweetIntent, "Choose one"));
+        } catch (final ActivityNotFoundException e) {
+            Toast.makeText(getBaseContext(), "You don't seem to have twitter installed on this device", Toast.LENGTH_SHORT).show();
         }
     }
 

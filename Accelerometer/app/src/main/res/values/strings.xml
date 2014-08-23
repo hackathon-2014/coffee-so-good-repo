@@ -3,5 +3,6 @@
 
     <string name="app_name">Twitchy Paint</string>
     <string name="action_settings">Settings</string>
+    <string name="twitter_share">Look at this cool picture I drew with Twitchy Paint!</string>
 
 </resources>

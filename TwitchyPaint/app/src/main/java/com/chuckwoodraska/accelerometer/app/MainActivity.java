@@ -81,6 +81,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     // VIEW VARS
     TextView title, xvalue, yvalue, zvalue, speedvalue;
+    public Boolean template_load = false;
     RelativeLayout layout;
 
 
@@ -229,13 +230,15 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         protected void onDraw(Canvas canvas)
         {
-//            Bitmap flower = BitmapFactory.decodeResource(getResources(),
-//                    R.drawable.flower);
-//            flower = Bitmap.createScaledBitmap(flower, canvas.getWidth(), canvas.getHeight(), false);
-//           draw.drawBitmap(flower, 0, 0, null);
+            if(template_load) {
+                Bitmap flower = BitmapFactory.decodeResource(getResources(),
+                        R.drawable.flower);
+                flower = Bitmap.createScaledBitmap(flower, canvas.getWidth(), canvas.getHeight(), false);
+                canvas.drawBitmap(flower, 0, 0, null);
+            }
             //canvas = new Canvas(my_bitmap);
             Paint p = new Paint(); // set some paint options
-
+            canvas.drawColor(Color.TRANSPARENT);
             for(int i =0; i < paths.size(); i++){
                 p.setStrokeWidth(brush_size);
                 p.setColor(paths_color.get(i)); // change later for color options
@@ -308,6 +311,9 @@ public class MainActivity extends Activity implements SensorEventListener {
             case R.id.share:
                 sendShareTwit();
                 return true;
+            case R.id.load_template:
+                template_load = !template_load;
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -318,8 +324,15 @@ public class MainActivity extends Activity implements SensorEventListener {
         try {
             String filename = Environment.getExternalStorageDirectory().toString();
             Canvas canvas = new Canvas(my_bitmap);
+            if(template_load) {
+                Bitmap flower = BitmapFactory.decodeResource(getResources(),
+                        R.drawable.flower);
+                flower = Bitmap.createScaledBitmap(flower, canvas.getWidth(), canvas.getHeight(), false);
+                canvas.drawBitmap(flower, 0, 0, null);
+            }
+            //canvas = new Canvas(my_bitmap);
             Paint p = new Paint(); // set some paint options
-            canvas.drawColor(Color.WHITE);
+            canvas.drawColor(Color.TRANSPARENT);
             for(int i =0; i < paths.size(); i++){
                 p.setStrokeWidth(brush_size);
                 p.setColor(paths_color.get(i)); // change later for color options

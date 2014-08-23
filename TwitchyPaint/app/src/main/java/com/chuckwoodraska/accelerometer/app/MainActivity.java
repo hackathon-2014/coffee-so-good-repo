@@ -31,6 +31,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -96,6 +97,7 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         Bitmap.Config conf = Bitmap.Config.ARGB_8888; // see other conf types
         my_bitmap = Bitmap.createBitmap(screen_width, screen_height, conf); // this creates a MUTABLE bitmap
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //setContentView(R.layout.activity_main); //refer layout file code below
         //get the sensor service
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -227,16 +229,13 @@ public class MainActivity extends Activity implements SensorEventListener {
 
         protected void onDraw(Canvas canvas)
         {
-            Canvas draw = new Canvas();
-
-            Paint paint = new Paint();
-
 //            Bitmap flower = BitmapFactory.decodeResource(getResources(),
 //                    R.drawable.flower);
 //            flower = Bitmap.createScaledBitmap(flower, canvas.getWidth(), canvas.getHeight(), false);
 //           draw.drawBitmap(flower, 0, 0, null);
             //canvas = new Canvas(my_bitmap);
             Paint p = new Paint(); // set some paint options
+
             for(int i =0; i < paths.size(); i++){
                 p.setStrokeWidth(brush_size);
                 p.setColor(paths_color.get(i)); // change later for color options
@@ -320,6 +319,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             String filename = Environment.getExternalStorageDirectory().toString();
             Canvas canvas = new Canvas(my_bitmap);
             Paint p = new Paint(); // set some paint options
+            canvas.drawColor(Color.WHITE);
             for(int i =0; i < paths.size(); i++){
                 p.setStrokeWidth(brush_size);
                 p.setColor(paths_color.get(i)); // change later for color options

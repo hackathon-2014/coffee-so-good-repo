@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
@@ -19,13 +20,17 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends Activity implements SensorEventListener {
     // DRAW THINGIES
     CustomDrawableView mCustomDrawableView = null;
     ShapeDrawable mDrawable = new ShapeDrawable();
-    public static int xmove;
-    public static int ymove;
+    Canvas savedCanvas = new Canvas();
+    public static int xmove = 0;
+    public static int ymove = 0;
+    public ArrayList<RectF> paths = new ArrayList<RectF>();
 
     // ACCELEROMETER STHUFF
     private SensorManager mSensorManager;
@@ -109,12 +114,29 @@ public class MainActivity extends Activity implements SensorEventListener {
                 last_x = x;
                 last_y = y;
                 last_z = z;
+                Boolean tilt = false;
+                if(((int)x) > 2) {
+                    xmove += 10;
+                    tilt = true;
+                }
+                else if(((int)x) < -2) {
+                    xmove -= 10;
+                    tilt = true;
+                }
+                else if (((int)y) > 2) {
+                    ymove += 10;
+                    tilt = true;
+                }
+                else if (((int)y) < -2) {
+                    ymove -= 10;
+                    tilt = true;
+                }
+                if(tilt) {
+                    RectF oval = new RectF(ymove, xmove, ymove + 50, xmove + 50); // set bounds of rectangle
+                    paths.add(oval);
+                }
 
-                xmove = (int) Math.pow(x, 3);
-                ymove = (int) Math.pow(y, 3);
             }
-
-
         }
     }
 
@@ -129,16 +151,17 @@ public class MainActivity extends Activity implements SensorEventListener {
             super(context);
 
             mDrawable = new ShapeDrawable(new OvalShape());
-            mDrawable.getPaint().setColor(0xff74AC23);
+            mDrawable.getPaint().setColor(Color.RED);
             mDrawable.setBounds(ymove, xmove, ymove + width, xmove + height);
         }
 
         protected void onDraw(Canvas canvas)
         {
-            RectF oval = new RectF(ymove, xmove, ymove + width, xmove + height); // set bounds of rectangle
             Paint p = new Paint(); // set some paint options
-            p.setColor(Color.RED);
-            canvas.drawOval(oval, p);
+            for(int i =0; i < paths.size(); i++){
+                p.setColor(Color.RED); // change later for color options
+                canvas.drawOval(paths.get(i), p);
+            }
             invalidate();
         }
     }
